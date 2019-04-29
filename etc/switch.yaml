@@ -1,0 +1,23 @@
+debug:
+  name: switch
+  service:
+    scheme: mtp+grpc
+    host: 0.0.0.0
+    port: 13404
+  verbose: true
+  log:
+    level: debug
+  heartbeat:
+    interval: 15
+  credential:
+    id: feaaf17976f843d091544de420773e71
+    secret: 93GgKDDYPYZOuhkDNEfLzNWQBfrqs3OQWvFFYyStD5Q=
+  service_endpoint:
+    device:
+      address: localhost:5002
+    default:
+      address: Peers-MBP:21733
+  driver:
+    name: rpi
+    version: pi3
+    pin: 13
