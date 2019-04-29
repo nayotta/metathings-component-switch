@@ -159,6 +159,10 @@ func (d *RpiSwitchDriver) Start() error {
 	d.op_mtx.Lock()
 	defer d.op_mtx.Unlock()
 
+	if d.st == SWITCH_DRIVER_STATE_ON {
+		return ErrNotStartable
+	}
+
 	d.pin.High()
 	d.st = SWITCH_DRIVER_STATE_ON
 
@@ -168,6 +172,10 @@ func (d *RpiSwitchDriver) Start() error {
 func (d *RpiSwitchDriver) Stop() error {
 	d.op_mtx.Lock()
 	defer d.op_mtx.Unlock()
+
+	if d.st == SWITCH_DRIVER_STATE_OFF {
+		return ErrNotStartable
+	}
 
 	d.pin.Low()
 	d.st = SWITCH_DRIVER_STATE_OFF
