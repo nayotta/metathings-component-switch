@@ -191,23 +191,12 @@ func (d *RpiSwitchDriver) State() *SwitchDriverState {
 }
 
 func NewRpiSwitchDriver(opt *SwitchDriverOption, args ...interface{}) (SwitchDriver, error) {
-	var ok bool
 	var logger log.FieldLogger
 	var module *component.Module
 
 	opt_helper.Setopt(map[string]func(key string, val interface{}) error{
-		"logger": func(key string, val interface{}) error {
-			if logger, ok = val.(log.FieldLogger); !ok {
-				return opt_helper.ErrInvalidArguments
-			}
-			return nil
-		},
-		"module": func(key string, val interface{}) error {
-			if module, ok = val.(*component.Module); !ok {
-				return opt_helper.ErrInvalidArguments
-			}
-			return nil
-		},
+		"logger": opt_helper.ToLogger(&logger),
+		"module": component.ToModule(&module),
 	})(args...)
 
 	ver := opt.GetString("version")
