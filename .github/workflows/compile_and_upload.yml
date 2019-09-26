@@ -1,0 +1,38 @@
+name: Compile Binary and Upload Asset
+on:
+  release:
+    types: [created]
+
+jobs:
+  compile-metathings-component-switch-and-upload-asset:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: ["linux", "darwin"]
+        goarch: ["amd64", "arm64", "arm"]
+        exclude:
+        - goos: darwin
+          goarch: arm
+        - goos: darwin
+          goarch: arm64
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-go@v1
+        with:
+          go-version: "1.12"
+      - name: Compile Metathings Component Switch Binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -o metathings-module-switch cmd/switch/main.go
+          tar zcvf metathings-module-switch.tar.gz metathings-module-switch
+      - name: Upload Metathings Component Switch Asset
+        uses: PeerXu/upload-asset@v1
+        with:
+          file: metathings-module-switch.tar.gz
+          os: ${{ matrix.goos }}
+          arch: ${{ matrix.goarch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

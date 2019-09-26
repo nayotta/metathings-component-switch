@@ -1,0 +1,17 @@
+name: Bump Version
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Bump Version and Push Tag
+      uses: PeerXu/github-tag-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        DEFAULT_BUMP: patch
+        WITH_V: true

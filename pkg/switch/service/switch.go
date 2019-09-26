@@ -2,6 +2,8 @@ package switch_service
 
 import (
 	"context"
+	"io"
+	"strings"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -21,6 +23,22 @@ type SwitchService struct {
 
 func (ss *SwitchService) logger() log.FieldLogger {
 	return ss.module.Logger()
+}
+
+func (ss *SwitchService) set_state(state string) error {
+	err := ss.module.PutObjects(map[string]io.Reader{
+		"state": strings.NewReader(state),
+	})
+	if err != nil {
+		ss.logger().WithError(err).Errorf("failed to set switch state")
+		return err
+	}
+	return nil
+}
+
+func (ss *SwitchService) reset() {
+	ss.driver.Stop()
+	ss.set_state("off")
 }
 
 func (ss *SwitchService) HANDLE_GRPC_Start(ctx context.Context, in *any.Any) (*any.Any, error) {
@@ -48,6 +66,10 @@ func (ss *SwitchService) Start(ctx context.Context, _ *empty.Empty) (*empty.Empt
 	err := ss.driver.Start()
 	if err != nil {
 		ss.logger().WithError(err).Errorf("failed to start switch")
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	if err = ss.set_state("on"); err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
@@ -84,6 +106,10 @@ func (ss *SwitchService) Stop(ctx context.Context, _ *empty.Empty) (*empty.Empty
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
+	if err = ss.set_state("off"); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
 	ss.logger().Infof("switch stop")
 
 	return &empty.Empty{}, nil
@@ -100,6 +126,8 @@ func (ss *SwitchService) InitModuleService(m *component.Module) error {
 		return err
 	}
 	ss.logger().WithField("driver", drv_opt.GetString("name")).Debugf("init switch driver")
+
+	ss.reset()
 
 	return nil
 }
