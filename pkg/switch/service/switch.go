@@ -2,7 +2,6 @@ package switch_service
 
 import (
 	"context"
-	"io"
 	"strings"
 
 	"github.com/golang/protobuf/ptypes"
@@ -13,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	driver "github.com/nayotta/metathings-component-switch/pkg/switch/driver"
+	pb "github.com/nayotta/metathings-protocol-switch/go/proto"
 	component "github.com/nayotta/metathings/pkg/component"
 )
 
@@ -25,23 +25,22 @@ func (ss *SwitchService) logger() log.FieldLogger {
 	return ss.module.Logger()
 }
 
-func (ss *SwitchService) set_state(state string) error {
-	err := ss.module.PutObjects(map[string]io.Reader{
-		"state": strings.NewReader(state),
-	})
+func (ss *SwitchService) update_state() error {
+	err := ss.module.PutObject("state", strings.NewReader(ss.driver.State().String()))
 	if err != nil {
 		ss.logger().WithError(err).Errorf("failed to set switch state")
 		return err
 	}
+
 	return nil
 }
 
 func (ss *SwitchService) reset() {
-	ss.driver.Stop()
-	ss.set_state("off")
+	ss.driver.Off()
+	ss.update_state()
 }
 
-func (ss *SwitchService) HANDLE_GRPC_Start(ctx context.Context, in *any.Any) (*any.Any, error) {
+func (ss *SwitchService) HANDLE_GRPC_On(ctx context.Context, in *any.Any) (*any.Any, error) {
 	var err error
 	req := &empty.Empty{}
 
@@ -49,7 +48,7 @@ func (ss *SwitchService) HANDLE_GRPC_Start(ctx context.Context, in *any.Any) (*a
 		return nil, err
 	}
 
-	res, err := ss.Start(ctx, req)
+	res, err := ss.On(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -62,23 +61,23 @@ func (ss *SwitchService) HANDLE_GRPC_Start(ctx context.Context, in *any.Any) (*a
 	return out, nil
 }
 
-func (ss *SwitchService) Start(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
-	err := ss.driver.Start()
+func (ss *SwitchService) On(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+	err := ss.driver.On()
 	if err != nil {
-		ss.logger().WithError(err).Errorf("failed to start switch")
+		ss.logger().WithError(err).Errorf("failed to turn switch on")
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	if err = ss.set_state("on"); err != nil {
+	if err = ss.update_state(); err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	ss.logger().Infof("switch startd")
+	ss.logger().Infof("switch on")
 
 	return &empty.Empty{}, nil
 }
 
-func (ss *SwitchService) HANDLE_GRPC_Stop(ctx context.Context, in *any.Any) (*any.Any, error) {
+func (ss *SwitchService) HANDLE_GRPC_Off(ctx context.Context, in *any.Any) (*any.Any, error) {
 	var err error
 	req := &empty.Empty{}
 
@@ -86,7 +85,7 @@ func (ss *SwitchService) HANDLE_GRPC_Stop(ctx context.Context, in *any.Any) (*an
 		return nil, err
 	}
 
-	res, err := ss.Stop(ctx, req)
+	res, err := ss.Off(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -99,20 +98,49 @@ func (ss *SwitchService) HANDLE_GRPC_Stop(ctx context.Context, in *any.Any) (*an
 	return out, nil
 }
 
-func (ss *SwitchService) Stop(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
-	err := ss.driver.Stop()
+func (ss *SwitchService) Off(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+	err := ss.driver.Off()
 	if err != nil {
-		ss.logger().WithError(err).Errorf("failed to stop switch")
+		ss.logger().WithError(err).Errorf("failed to turn switch off")
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	if err = ss.set_state("off"); err != nil {
+	if err = ss.update_state(); err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
-	ss.logger().Infof("switch stop")
+	ss.logger().Infof("switch off")
 
 	return &empty.Empty{}, nil
+}
+
+func (ss *SwitchService) HANDLE_GRPC_State(ctx context.Context, in *any.Any) (*any.Any, error) {
+	var err error
+	req := &empty.Empty{}
+
+	if err = ptypes.UnmarshalAny(in, req); err != nil {
+		return nil, err
+	}
+
+	res, err := ss.State(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := ptypes.MarshalAny(res)
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (ss *SwitchService) State(ctx context.Context, _ *empty.Empty) (*pb.StateResponse, error) {
+	state := ss.driver.State().String()
+
+	ss.logger().WithField("state", state).Debugf("get state")
+
+	return &pb.StateResponse{State: state}, nil
 }
 
 func (ss *SwitchService) InitModuleService(m *component.Module) error {

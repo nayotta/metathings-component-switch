@@ -1,0 +1,22 @@
+debug:
+  name: <module-name>
+  service:
+    scheme: mtp+grpc
+    host: <service-host>
+    port: <service-port>
+  verbose: true
+  log:
+    level: <log-level>
+  heartbeat:
+    interval: 15
+  credential:
+    id: <credential-id>
+    secret: <credential-secret>
+  service_endpoint:
+    device:
+      address: <device-endpoint>
+    default:
+      address: <metathings-endpoint>
+  driver:
+    name: http
+    target: <target url>

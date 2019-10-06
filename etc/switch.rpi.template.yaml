@@ -1,0 +1,23 @@
+debug:
+  name: <module-name>
+  service:
+    scheme: mtp+grpc
+    host: <service-host>
+    port: <service-port>
+  verbose: true
+  log:
+    level: <log-level>
+  heartbeat:
+    interval: 15
+  credential:
+    id: <credential-id>
+    secret: <credential-secret>
+  service_endpoint:
+    device:
+      address: <device-endpoint>
+    default:
+      address: <metathings-endpoint>
+  driver:
+    name: rpi
+    version: <pi version> # pi1, pi2, pi3, pi0, pi0w, pi4
+    pin: <switch pin> # high is on, low is off

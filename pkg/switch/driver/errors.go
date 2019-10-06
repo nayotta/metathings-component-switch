@@ -3,7 +3,7 @@ package switch_driver
 import "errors"
 
 var (
-	ErrInvalidSwitchDriver = errors.New("invalid switch driver")
-	ErrNotStartable        = errors.New("not startable")
-	ErrNotStopable         = errors.New("not stopable")
+	ErrInvalidSwitchDriver  = errors.New("invalid switch driver")
+	ErrNotTurnable          = errors.New("not turnable")
+	ErrUnexpectedStatusCode = errors.New("unexpected status code")
 )

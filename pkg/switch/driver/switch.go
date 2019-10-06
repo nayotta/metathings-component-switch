@@ -33,8 +33,8 @@ var (
 )
 
 type SwitchDriver interface {
-	Start() error
-	Stop() error
+	On() error
+	Off() error
 	State() *SwitchDriverState
 }
 

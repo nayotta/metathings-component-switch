@@ -115,6 +115,7 @@ var rpi_pin_modes = map[string]string{
 	"pi1":  "legacy",
 	"pi2":  "legacy",
 	"pi3":  "modern",
+	"pi4":  "modern",
 	"pi0":  "modern",
 	"pi0w": "modern",
 }
@@ -155,12 +156,12 @@ type RpiSwitchDriver struct {
 	st     *SwitchDriverState
 }
 
-func (d *RpiSwitchDriver) Start() error {
+func (d *RpiSwitchDriver) On() error {
 	d.op_mtx.Lock()
 	defer d.op_mtx.Unlock()
 
 	if d.st == SWITCH_DRIVER_STATE_ON {
-		return ErrNotStartable
+		return ErrNotTurnable
 	}
 
 	d.pin.High()
@@ -169,12 +170,12 @@ func (d *RpiSwitchDriver) Start() error {
 	return nil
 }
 
-func (d *RpiSwitchDriver) Stop() error {
+func (d *RpiSwitchDriver) Off() error {
 	d.op_mtx.Lock()
 	defer d.op_mtx.Unlock()
 
 	if d.st == SWITCH_DRIVER_STATE_OFF {
-		return ErrNotStartable
+		return ErrNotTurnable
 	}
 
 	d.pin.Low()
