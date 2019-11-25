@@ -3,7 +3,7 @@ package switch_driver
 import (
 	"sync"
 
-	"github.com/nayotta/viper"
+	"github.com/spf13/viper"
 )
 
 type SwitchDriverOption struct {
